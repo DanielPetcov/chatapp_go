@@ -18,12 +18,12 @@ func NewJWTHandler() *JWTHandler {
 	return &JWTHandler{}
 }
 
-func (j *JWTHandler) NewJWT() (string, error) {
+func (j *JWTHandler) NewJWT(userID string) (string, error) {
 	now := time.Now()
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"iss": "auth-server",
-			"sub": "dan",
+			"sub": userID,
 			"exp": jwt.NewNumericDate(now.Add(time.Hour * 24)),
 		})
 
@@ -35,18 +35,18 @@ func (j *JWTHandler) NewJWT() (string, error) {
 	return tokenString, nil
 }
 
-func (j *JWTHandler) CheckJWT(tokenString string) error {
+func (j *JWTHandler) CheckJWT(tokenString string) (string, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (any, error) {
 		return []byte(secretKey), nil
 	})
 
 	if err != nil {
-		return errors.New("parse didn't work")
+		return "", errors.New("parse didn't work")
 	}
 
 	if token.Valid {
-		return nil
+		return token.Claims.GetSubject()
 	} else {
-		return errors.New("invalid token")
+		return "", errors.New("invalid token")
 	}
 }

@@ -34,7 +34,7 @@ func main() {
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://chat-app-go-frontend.vercel.app", "https://api.ppeettss.shop"},
+		AllowOrigins:     []string{"https://chat-app-go-frontend.vercel.app", "https://api.ppeettss.shop", "http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "DELETE", "PUT"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
