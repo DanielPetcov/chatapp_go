@@ -66,6 +66,7 @@ func main() {
 	chatHandler.ChatColl = db.Collection("chats")
 
 	v1.GET("/chat", chatHandler.ListOfChats)
+	v1.GET("/chat/messages/:id", chatHandler.GetMessagesChat)
 	v1.POST("/chat", chatHandler.NewChat)
 	v1.POST("/chat/user", chatHandler.AddToChat)
 

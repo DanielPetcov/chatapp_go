@@ -70,6 +70,7 @@ func (h *Hub) Run() {
 			h.ChatColl.UpdateByID(context.Background(), chat.ID, bson.M{
 				"$push": bson.M{
 					"messages": entities.Message{
+						ID:          bson.NewObjectID(),
 						Text:        message.Message,
 						DateCreated: bson.NewDateTimeFromTime(time.Now()),
 						Author:      authorObjectID,

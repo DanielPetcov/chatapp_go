@@ -2,6 +2,7 @@ package entities
 
 import (
 	"context"
+	"log"
 
 	"github.com/DanielPetcov/chatapp_go/auth"
 	"github.com/DanielPetcov/chatapp_go/general"
@@ -43,6 +44,10 @@ func NewChatHandler() *ChatHandler {
 	return &ChatHandler{
 		JWTHandler: auth.NewJWTHandler(),
 	}
+}
+
+type ChatMessagesBody struct {
+	Messages []Message `json:"messages,omitempty"`
 }
 
 func (c *ChatHandler) ListOfChats(ctx *gin.Context) {
@@ -186,5 +191,40 @@ func (c *ChatHandler) AddToChat(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"message": "ok",
+	})
+}
+
+func (c *ChatHandler) GetMessagesChat(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		log.Println("missing error")
+		ctx.JSON(400, gin.H{
+			"message": "missing chat id",
+		})
+	}
+
+	chatObjectId, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	filter := bson.D{
+		{
+			Key:   "_id",
+			Value: chatObjectId,
+		},
+	}
+	cursor := c.ChatColl.FindOne(context.Background(), filter)
+
+	var chat ChatMessagesBody
+	err = cursor.Decode(&chat)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"messages": chat.Messages,
 	})
 }
