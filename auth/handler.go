@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"log"
 
+	"github.com/DanielPetcov/chatapp_go/general"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -45,8 +45,6 @@ type LoginedUserDB struct {
 	Password string        `bson:"password"`
 }
 
-//
-
 type VerifyJWTBody struct {
 	Token string `json:"token"`
 }
@@ -54,10 +52,7 @@ type VerifyJWTBody struct {
 func (a *AuthHandler) LoginHanlder(c *gin.Context) {
 	var data = LoginBody{}
 	if err := c.BindJSON(&data); err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
@@ -72,53 +67,39 @@ func (a *AuthHandler) LoginHanlder(c *gin.Context) {
 	var userDB LoginedUserDB
 	err := a.UsersColl.FindOne(context.Background(), filter).Decode(&userDB)
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
 	if !Verify(userDB.Password, data.Password) {
-		log.Println("invalid password")
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
 	token, err := a.JWTHandler.NewJWT(userDB.ID.Hex())
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
 	c.JSON(200, gin.H{
 		"message": "success",
 		"jwt":     token,
+		"userID":  userDB.ID.Hex(),
 	})
 }
 
 func (a *AuthHandler) RegisterHandler(c *gin.Context) {
 	var data = RegisterBody{}
 	if err := c.BindJSON(&data); err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
 	// database implementation
 	hashedPassword, err := Hash(data.Password)
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
@@ -128,10 +109,7 @@ func (a *AuthHandler) RegisterHandler(c *gin.Context) {
 	})
 
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
@@ -139,10 +117,7 @@ func (a *AuthHandler) RegisterHandler(c *gin.Context) {
 
 	token, err := a.JWTHandler.NewJWT(userID)
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 
@@ -150,24 +125,20 @@ func (a *AuthHandler) RegisterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "success",
 		"jwt":     token,
+		"userID":  userID,
 	})
 }
 
 func (a *AuthHandler) VerifyJWT(c *gin.Context) {
 	var data = VerifyJWTBody{}
 	if err := c.BindJSON(&data); err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "error parsing token",
-		})
+		general.GeneralError(c, err)
+		return
 	}
 
 	_, err := a.JWTHandler.CheckJWT(data.Token)
 	if err != nil {
-		log.Println(err)
-		c.JSON(400, gin.H{
-			"message": "invalid token",
-		})
+		general.GeneralError(c, err)
 		return
 	}
 

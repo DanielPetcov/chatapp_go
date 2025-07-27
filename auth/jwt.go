@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -49,4 +50,17 @@ func (j *JWTHandler) CheckJWT(tokenString string) (string, error) {
 	} else {
 		return "", errors.New("invalid token")
 	}
+}
+
+func (j *JWTHandler) ExtractJWTfromAuth(authHeader string) (string, error) {
+	token := ""
+	if strings.HasPrefix(authHeader, "Bearer") && len(authHeader) > 7 {
+		token = authHeader[7:]
+	}
+
+	if len(token) == 0 {
+		return "", errors.New("invalid auth header")
+	}
+
+	return token, nil
 }
