@@ -36,6 +36,12 @@ type NewChatBody struct {
 	Name string `json:"name"`
 }
 
+type ReturnNewChat struct {
+	ID       string `json:"ID"`
+	Name     string `json:"Name"`
+	AuthorID string `json:"AuthorID"`
+}
+
 type RemoveUserFromChatBody struct {
 	ChatID string `json:"chatID"`
 	UserID string `json:"userID"`
@@ -126,7 +132,7 @@ func (c *ChatHandler) NewChat(ctx *gin.Context) {
 		return
 	}
 
-	_, err = c.ChatColl.InsertOne(context.Background(), ChatDB{
+	result, err := c.ChatColl.InsertOne(context.Background(), ChatDB{
 		Name:           data.Name,
 		AuthorID:       userObjectID,
 		ParticipantsID: []bson.ObjectID{userObjectID},
@@ -139,6 +145,13 @@ func (c *ChatHandler) NewChat(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"message": "ok",
+		"chats": []ReturnNewChat{
+			{
+				ID:       result.InsertedID.(bson.ObjectID).Hex(),
+				AuthorID: userId,
+				Name:     data.Name,
+			},
+		},
 	})
 }
 
