@@ -83,9 +83,10 @@ func (a *AuthHandler) LoginHanlder(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"message": "success",
-		"jwt":     token,
-		"userID":  userDB.ID.Hex(),
+		"message":  "success",
+		"jwt":      token,
+		"userID":   userDB.ID.Hex(),
+		"userName": data.Username,
 	})
 }
 
@@ -123,9 +124,10 @@ func (a *AuthHandler) RegisterHandler(c *gin.Context) {
 
 	// if create succesfully user, then return jwt
 	c.JSON(200, gin.H{
-		"message": "success",
-		"jwt":     token,
-		"userID":  userID,
+		"message":  "success",
+		"jwt":      token,
+		"userID":   userID,
+		"userName": data.Username,
 	})
 }
 

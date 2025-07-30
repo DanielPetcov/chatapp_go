@@ -36,6 +36,11 @@ type NewChatBody struct {
 	Name string `json:"name"`
 }
 
+type RemoveUserFromChatBody struct {
+	ChatID string `json:"chatID"`
+	UserID string `json:"userID"`
+}
+
 type AddToChatBody struct {
 	ChatID string `json:"chatID"`
 }
@@ -130,6 +135,75 @@ func (c *ChatHandler) NewChat(ctx *gin.Context) {
 	if err != nil {
 		general.GeneralError(ctx, err)
 		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"message": "ok",
+	})
+}
+
+func (c *ChatHandler) RemoveUserFromChat(ctx *gin.Context) {
+	var dataBody RemoveUserFromChatBody
+	err := ctx.BindJSON(&dataBody)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	authHeader := ctx.GetHeader("Authorization")
+
+	token, err := c.JWTHandler.ExtractJWTfromAuth(authHeader)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	// if jwt bad, then exit
+	_, err = c.JWTHandler.CheckJWT(token)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	chatObjectID, err := bson.ObjectIDFromHex(dataBody.ChatID)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	userObjectID, err := bson.ObjectIDFromHex(dataBody.UserID)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	var chat ChatDB
+	err = c.ChatColl.FindOne(context.Background(), bson.M{"_id": chatObjectID}).Decode(&chat)
+	if err != nil {
+		general.GeneralError(ctx, err)
+		return
+	}
+
+	if chat.AuthorID == userObjectID {
+		_, err := c.ChatColl.DeleteOne(context.Background(), bson.M{"_id": chatObjectID})
+		if err != nil {
+			general.GeneralError(ctx, err)
+			return
+		}
+	} else {
+		update := bson.D{{
+			Key: "$pull",
+			Value: bson.D{{
+				Key:   "participantsID",
+				Value: userObjectID,
+			}},
+		}}
+
+		_, err := c.ChatColl.UpdateOne(context.Background(), bson.M{"_id": chatObjectID}, update)
+		if err != nil {
+			general.GeneralError(ctx, err)
+			return
+		}
 	}
 
 	ctx.JSON(200, gin.H{

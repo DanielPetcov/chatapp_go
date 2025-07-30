@@ -69,6 +69,7 @@ func main() {
 	v1.GET("/chat/messages/:id", chatHandler.GetMessagesChat)
 	v1.POST("/chat", chatHandler.NewChat)
 	v1.POST("/chat/user", chatHandler.AddToChat)
+	v1.DELETE("/chat/user", chatHandler.RemoveUserFromChat)
 
 	hub := websocket.NewHub()
 	hub.ChatColl = db.Collection("chats")
