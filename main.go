@@ -77,7 +77,7 @@ func main() {
 
 	jwtHandler := auth.NewJWTHandler()
 
-	v1.GET("/ws", func(ctx *gin.Context) {
+	v1.GET("/wss", func(ctx *gin.Context) {
 		token := ctx.Query("token")
 		if token == "" {
 			general.GeneralError(ctx, err)
